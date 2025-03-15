@@ -1,0 +1,7 @@
+root = true
+
+[*.lua]
+max_line_length = 160
+space_inside_function_call_parentheses = true
+space_inside_function_param_list_parentheses = true
+space_inside_square_brackets = true

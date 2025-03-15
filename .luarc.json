@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "Lua.diagnostics.globals": [
+    "arg1",   
+    "_",
+    "this",
+    "event"
+  ],
+  "Lua.workspace.checkThirdParty": false,
+  "Lua.workspace.ignoreDir": [],
+  "workspace.library": [],
+  "diagnostics.disable": [],
+  "Lua.hint.enable": true
+}
