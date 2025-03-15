@@ -666,6 +666,7 @@ function SendMail_Load()
     api.MailAutoCompleteBox:Hide()
   end
 
+  api.SendMailCODAllButtonText:SetText( "  " .. L[ "All mails" ] )
   api.SendMailCODAllButton:SetScript( "OnClick", function()
     m.set_cod_text()
   end )
@@ -969,12 +970,14 @@ do
   L[ "1st mail" ] = nil
   L[ "each mail" ] = nil
   L[ "Money received" ] = nil
+  L[ "All mails" ] = nil
 
   if api.GetLocale() == "frFR" then
     L[ "collected" ] = "collecté"
     L[ "1st mail" ] = "1er courrier"
     L[ "each mail" ] = "chaque courrier"
     L[ "Money received" ] = "Argent reçu"
+    L[ "All mails" ] = "Tous les courriers"
   end
 
   if api.GetLocale() == "esES" then
@@ -982,6 +985,7 @@ do
     L[ "1st mail" ] = "1er correo"
     L[ "each mail" ] = "cada correo"
     L[ "Money received" ] = "Dinero recibido"
+    L[ "All mails" ] = "Todos los correos"
   end
 
   if api.GetLocale() == "deDE" then
@@ -989,6 +993,7 @@ do
     L[ "1st mail" ] = "1. Mail"
     L[ "each mail" ] = "jede Mail"
     L[ "Money received" ] = "Geld erhalten"
+    L[ "All mails" ] = "Alle E-Mails"
   end
 
   if api.GetLocale() == "ruRU" then
@@ -996,5 +1001,6 @@ do
     L[ "1st mail" ] = "1-я почта"
     L[ "each mail" ] = "каждая почта"
     L[ "Money received" ] = "Деньги получены"
+    L[ "All mails" ] = "Bce почта"
   end
 end

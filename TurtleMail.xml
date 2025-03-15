@@ -193,11 +193,6 @@
 				</Offset>
 			</Anchor>
 		</Anchors>
-		<Scripts>
-			<OnLoad>
-				getglobal(this:GetName().."Text"):SetText("  All mails");
-			</OnLoad>
-		</Scripts>
 	</CheckButton>
 
 	<Frame parent="InboxFrame" >
