@@ -7,7 +7,6 @@ local ATTACHMENTS_MAX_ROWS_SEND = 3
 
 local api = getfenv()
 local getn = table.getn ---@diagnostic disable-line: deprecated
-local money_received = 0
 local orig = {}
 local L = {}
 
@@ -53,6 +52,9 @@ function m.MAIL_SHOW()
   if api.TurtleMail_Point then
     api.MailFrame:SetPoint( api.TurtleMail_Point.point, api.TurtleMail_Point.x, api.TurtleMail_Point.y )
   end
+
+  m.money_received = 0
+  m.update_money( 0 )
 end
 
 function m.MAIL_CLOSED()
@@ -145,8 +147,8 @@ do
       update = false
       local _, _, _, _, _, COD, _, _, _, _, _, _, isGM = api.GetInboxHeaderInfo( i )
       if i > api.GetInboxNumItems() then
-        if money_received > 0 then
-          api.DEFAULT_CHAT_FRAME:AddMessage( string.format( "|cffabd473TurtleMail|r: %s%s.", m.format_money( money_received ), L[ "collected" ] ) )
+        if m.money_received > 0 then
+          api.DEFAULT_CHAT_FRAME:AddMessage( string.format( "|cffabd473TurtleMail|r: %s%s.", m.format_money( m.money_received ), L[ "collected" ] ) )
         end
         Inbox_Abort()
       elseif Inbox_Skip or COD > 0 or isGM then
@@ -218,10 +220,10 @@ end
 
 ---@param money number
 function m.update_money( money )
-  money_received = money_received + money
-  api.MoneyReceived:SetText( L[ "Money received" ] .. ": " .. m.format_money( money_received ) )
+  m.money_received = m.money_received + money
+  api.MoneyReceived:SetText( L[ "Money received" ] .. ": " .. m.format_money( m.money_received ) )
 
-  if money_received > 0 then
+  if m.money_received > 0 then
     api.MoneyReceived:Show()
   else
     api.MoneyReceived:Hide()
@@ -253,9 +255,9 @@ end
 do
   -- hack to prevent beancounter from deleting mail
   local TakeInboxMoney, TakeInboxItem, DeleteInboxItem = api.TakeInboxMoney, api.TakeInboxItem, api.DeleteInboxItem
-  function Inbox_Open( i )
+  function Inbox_Open( i, manual )
     local _, _, _, _, money, _, _, _, read, _, _, _, _ = api.GetInboxHeaderInfo( i )
-    if money and read then
+    if money and read or manual then
       m.update_money( money )
     end
     api.GetInboxText( i )
@@ -331,7 +333,7 @@ function m.hook.InboxFrame_OnClick( i )
   if Inbox_opening or arg1 == "RightButton" and ({ api.GetInboxHeaderInfo( i ) })[ 6 ] > 0 then
     this:SetChecked( nil )
   elseif arg1 == "RightButton" then
-    Inbox_Open( i )
+    Inbox_Open( i, true )
   else
     return orig.InboxFrame_OnClick( i )
   end
