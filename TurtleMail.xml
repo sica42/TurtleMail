@@ -145,7 +145,7 @@
 			</OnDragStart>
 			<OnClick>
 				Mail.AttachmentButton_OnClick()
-				this:GetScript'OnEnter'()
+				this:GetScript('OnEnter')()
 			</OnClick>
 			<OnEnter>
 				GameTooltip:SetOwner(this, 'ANCHOR_RIGHT')

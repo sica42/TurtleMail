@@ -1,69 +1,112 @@
-Mail = Mail or {}
+local api = getfenv()
+Mail = Mail or api.CreateFrame( 'Frame', nil, api.MailFrame )
 local m = Mail
+local getn = table.getn ---@diagnostic disable-line: deprecated
+local function pack( ... ) return arg end
+local L = {}
 
 local ATTACHMENTS_MAX = 21
 local ATTACHMENTS_PER_ROW_SEND = 7
 local ATTACHMENTS_MAX_ROWS_SEND = 3
 
-local api = getfenv()
-local getn = table.getn ---@diagnostic disable-line: deprecated
-local orig = {}
-local L = {}
-
-do
-  local f = api.CreateFrame( "Frame" )
-  f:SetScript( "OnEvent", function() Mail[ event ]() end )
-
-  for _, event in { "ADDON_LOADED", "PLAYER_LOGIN", "UI_ERROR_MESSAGE", "CURSOR_UPDATE", "BAG_UPDATE", "MAIL_SHOW", "MAIL_CLOSED", "MAIL_SEND_SUCCESS", "MAIL_INBOX_UPDATE" } do
-    f:RegisterEvent( event )
-  end
-end
-
+m.timer = 0
+m.orig = {}
+m.hooks = {}
+m.hook = setmetatable( {}, { __newindex = function( _, k, v ) m.hooks[ k ] = v end } )
+m.debug_enabled = false
 api.TurtleMail_AutoCompleteNames = {}
 
-local function pack( ... ) return arg end
+function Mail.init()
+  m.debug( "Mail.init" )
+  m:SetScript( "OnUpdate", m.on_update )
 
-do
-  local f = api.CreateFrame( "Frame" )
-  local cursorItem
-  function m.CURSOR_UPDATE()
-    cursorItem = nil
-  end
-
-  function GetCursorItem()
-    return cursorItem
-  end
-
-  function SetCursorItem( item )
-    f:SetScript( "OnUpdate", function()
-      cursorItem = item
-      f:SetScript( "OnUpdate", nil )
-    end )
+  -- Register events
+  m:SetScript( "OnEvent", function() m[ event ]() end )
+  for _, event in { "ADDON_LOADED", "PLAYER_LOGIN", "UI_ERROR_MESSAGE", "CURSOR_UPDATE", "BAG_UPDATE", "MAIL_SHOW", "MAIL_CLOSED", "MAIL_SEND_SUCCESS", "MAIL_INBOX_UPDATE" } do
+    m:RegisterEvent( event )
   end
 end
 
-function m.BAG_UPDATE()
+function Mail.on_update()
+  if not api.MailFrame or not api.MailFrame:IsVisible() then return end
+
+  if m._cursorItem then
+    m.debug( "on_update: cursorItem" )
+    m.cursorItem = m._cursorItem
+    m._cursorItem = nil
+  end
+
+  if m.sendmail_update then
+    m.debug( "on_update: sendmail" )
+    m.sendmail_update = nil
+    if SendMail_sending then
+      m.debug( "SendMail_sending" )
+      SendMail_Send()
+    end
+  end
+
+  if m.inbox_update then
+    m.debug( "on_update: inbox_update" )
+    m.inbox_update = false
+    local _, _, _, _, _, COD, _, _, _, _, _, _, isGM = api.GetInboxHeaderInfo( m.inbox_index )
+    if m.inbox_index > api.GetInboxNumItems() then
+      if m.money_received > 0 then
+        api.DEFAULT_CHAT_FRAME:AddMessage( string.format( "|cffabd473TurtleMail|r: %s%s.", m.format_money( m.money_received ), L[ "collected" ] ) )
+      end
+      Inbox_Abort()
+    elseif Inbox_Skip or COD > 0 or isGM then
+      Inbox_Skip = false
+      m.inbox_index = m.inbox_index + 1
+      m.inbox_update = true
+    else
+      Inbox_Open( m.inbox_index )
+    end
+  end
+
+  if m.timer > 0 then
+    m.timer = m.timer - 1
+  elseif not Inbox_opening then
+    m.timer = 200
+    api.CheckInbox()
+  end
+end
+
+function Mail.CURSOR_UPDATE()
+  m.cursorItem = nil
+end
+
+function Mail.get_cursor_item()
+  return Mail.cursorItem
+end
+
+---@param item table
+function Mail.set_cursor_item( item )
+  m._cursorItem = item
+end
+
+function Mail.BAG_UPDATE()
   if api.MailFrame:IsVisible() then
     api.SendMailFrame_Update()
   end
 end
 
-function m.MAIL_SHOW()
+function Mail.MAIL_SHOW()
   if api.TurtleMail_Point then
     api.MailFrame:SetPoint( api.TurtleMail_Point.point, api.TurtleMail_Point.x, api.TurtleMail_Point.y )
   end
 
+  m.timer = 0
   m.money_received = 0
   m.update_money( 0 )
 end
 
-function m.MAIL_CLOSED()
+function Mail.MAIL_CLOSED()
   Inbox_Abort()
   SendMail_sending = false
   SendMail_Clear()
 end
 
-function m.UI_ERROR_MESSAGE()
+function Mail.UI_ERROR_MESSAGE()
   if Inbox_opening then
     if arg1 == api.ERR_INV_FULL then
       Inbox_Abort()
@@ -74,12 +117,12 @@ function m.UI_ERROR_MESSAGE()
     SendMail_sending = false
     SendMail_state = nil
     api.ClearCursor()
-    orig.ClickSendMailItemButton()
+    m.orig.ClickSendMailItemButton()
     api.ClearCursor()
   end
 end
 
-function m.ADDON_LOADED()
+function Mail.ADDON_LOADED()
   if arg1 ~= "TurtleMail" then return end
 
   local version = api.GetAddOnMetadata( "TurtleMail", "Version" )
@@ -88,44 +131,49 @@ function m.ADDON_LOADED()
   api.UIPanelWindows.MailFrame.pushable = 1
   api.UIPanelWindows.FriendsFrame.pushable = 2
 
-  Inbox_Load()
-  SendMail_Load()
+  m.inbox_load()
+  m.sendmail_load()
 end
 
-do
-  local f = api.CreateFrame( "Frame" )
-  local function update()
-    f:SetScript( "OnUpdate", nil )
-    SendMail_Send()
+function Mail.PLAYER_LOGIN()
+  m.debug( "PLAYER_LOGIN" )
+  for k, v in m.hooks do
+    m.orig[ k ] = api[ k ]
+    api[ k ] = v
   end
-  function m.MAIL_SEND_SUCCESS()
-    if SendMail_state then
-      m.addAutoCompleteName( SendMail_state.to )
+  local key = api.GetCVar( "realmName" ) .. "|" .. api.UnitFactionGroup( "player" )
+  api.TurtleMail_AutoCompleteNames[ key ] = api.TurtleMail_AutoCompleteNames[ key ] or {}
+  for char, lastSeen in api.TurtleMail_AutoCompleteNames[ key ] do
+    if api.GetTime() - lastSeen > 60 * 60 * 24 * 30 then
+      api.TurtleMail_AutoCompleteNames[ key ][ char ] = nil
     end
-    if SendMail_sending then
-      f:SetScript( "OnUpdate", update )
-    end
+  end
+
+  m.add_auto_complete_name( api.UnitName( "player" ) )
+end
+
+function Mail.MAIL_SEND_SUCCESS()
+  if SendMail_state then
+    m.add_auto_complete_name( SendMail_state.to )
+  end
+  if SendMail_sending then
+    m.sendmail_update = true
   end
 end
 
-function m.addAutoCompleteName( name )
-  local key = api.GetCVar "realmName" .. "|" .. api.UnitFactionGroup "player"
+function Mail.MAIL_INBOX_UPDATE()
+  if Inbox_opening then
+    m.inbox_update = true
+  end
+end
+
+---@param name string
+function Mail.add_auto_complete_name( name )
+  local key = api.GetCVar( "realmName" ) .. "|" .. api.UnitFactionGroup( "player" )
   api.TurtleMail_AutoCompleteNames[ key ][ name ] = api.GetTime()
 end
 
-do
-  local x = 0
-  api.CreateFrame( "Frame", api.InboxFrame ):SetScript( "OnUpdate", function()
-    if x > 0 then
-      x = x - 1
-    elseif not Inbox_opening then
-      x = 100
-      api.CheckInbox()
-    end
-  end )
-end
-
-function Inbox_Load()
+function Mail.inbox_load()
   local btn = api.CreateFrame( "Button", nil, api.InboxFrame, "UIPanelButtonTemplate" )
   btn:SetPoint( "BOTTOM", -10, 90 )
   btn:SetText( api.OPENMAIL )
@@ -133,57 +181,25 @@ function Inbox_Load()
   btn:SetHeight( 25 )
   btn:SetScript( "OnClick", Inbox_OpenAll )
 
-  api.MailFrame:EnableMouse( true )
   api.MailFrame:SetMovable( true )
   api.MailFrame:SetScript( "OnDragStop", m.on_drag_stop )
 end
 
-do
-  local i, update
-  local f = api.CreateFrame( "Frame" )
-  f:Hide()
-  f:SetScript( "OnUpdate", function()
-    if update then
-      update = false
-      local _, _, _, _, _, COD, _, _, _, _, _, _, isGM = api.GetInboxHeaderInfo( i )
-      if i > api.GetInboxNumItems() then
-        if m.money_received > 0 then
-          api.DEFAULT_CHAT_FRAME:AddMessage( string.format( "|cffabd473TurtleMail|r: %s%s.", m.format_money( m.money_received ), L[ "collected" ] ) )
-        end
-        Inbox_Abort()
-      elseif Inbox_Skip or COD > 0 or isGM then
-        Inbox_Skip = false
-        i = i + 1
-        update = true
-      else
-        Inbox_Open( i )
-      end
-    end
-  end )
-
-  function m.MAIL_INBOX_UPDATE()
-    if Inbox_opening then
-      update = true
-    end
-  end
-
-  function Inbox_OpenAll()
-    Inbox_opening = true
-    Inbox_UpdateLock()
-    i = 1
-    Inbox_skip = false
-    update = true
-    f:Show()
-  end
-
-  function Inbox_Abort()
-    Inbox_opening = false
-    Inbox_UpdateLock()
-    f:Hide()
-  end
+function Inbox_OpenAll()
+  Inbox_opening = true
+  Inbox_UpdateLock()
+  Inbox_skip = false
+  m.inbox_index = 1
+  m.inbox_update = true
 end
 
-function m.set_cod_text()
+function Inbox_Abort()
+  Inbox_opening = false
+  Inbox_UpdateLock()
+  m.inbox_update = false
+end
+
+function Mail.set_cod_text()
   local text = string.sub( api.COD_AMOUNT, 1, string.len( api.COD_AMOUNT ) - 1 )
 
   ---@diagnostic disable-next-line: undefined-global
@@ -199,7 +215,7 @@ function m.set_cod_text()
 end
 
 ---@param copper number
-function m.format_money( copper )
+function Mail.format_money( copper )
   local gold = math.floor( copper / 10000 )
   local silver = math.floor( (copper - gold * 10000) / 100 )
   local copper_remain = copper - (gold * 10000) - (silver * 100)
@@ -219,7 +235,7 @@ function m.format_money( copper )
 end
 
 ---@param money number
-function m.update_money( money )
+function Mail.update_money( money )
   m.money_received = m.money_received + money
   api.MoneyReceived:SetText( L[ "Money received" ] .. ": " .. m.format_money( m.money_received ) )
 
@@ -230,7 +246,7 @@ function m.update_money( money )
   end
 end
 
-function m.on_drag_stop()
+function Mail.on_drag_stop()
   local f = api.MailFrame
   if not f then return end
   f:StopMovingOrSizing()
@@ -240,10 +256,10 @@ function m.on_drag_stop()
   local point, _, _, x, y = api.MailFrame:GetPoint()
   local nx, ny = x, y
 
-  if f:GetLeft() < 0 then nx = -10 end
+  if f:GetLeft() < -10 then nx = -10 end
   if f:GetRight() > screen_width + 28 then nx = screen_width + 28 - f:GetWidth() end
   if f:GetTop() > screen_height + 10 then ny = 10 end
-  if f:GetBottom() < -40 then ny = -screen_height + f:GetHeight() - 40 end
+  if f:GetBottom() < -44 then ny = -screen_height + f:GetHeight() - 44 end
 
   if (nx ~= x or ny ~= y) then
     api.MailFrame:SetPoint( point, nx, ny )
@@ -255,6 +271,8 @@ end
 do
   -- hack to prevent beancounter from deleting mail
   local TakeInboxMoney, TakeInboxItem, DeleteInboxItem = api.TakeInboxMoney, api.TakeInboxItem, api.DeleteInboxItem
+  ---@param i number
+  ---@param manual boolean?
   function Inbox_Open( i, manual )
     local _, _, _, _, money, _, _, _, read, _, _, _, _ = api.GetInboxHeaderInfo( i )
     if money and read or manual then
@@ -277,77 +295,54 @@ function Inbox_UpdateLock()
   end
 end
 
--- Setup hooks
-do
-  local hooks = {}
-  m.hook = setmetatable( {}, { __newindex = function( _, k, v ) hooks[ k ] = v end } )
-  function m.PLAYER_LOGIN()
-    for k, v in hooks do
-      orig[ k ] = api[ k ]
-      api[ k ] = v
-    end
-    local key = api.GetCVar "realmName" .. "|" .. api.UnitFactionGroup "player"
-    api.TurtleMail_AutoCompleteNames[ key ] = api.TurtleMail_AutoCompleteNames[ key ] or {}
-    for char, lastSeen in api.TurtleMail_AutoCompleteNames[ key ] do
-      if api.GetTime() - lastSeen > 60 * 60 * 24 * 30 then
-        api.TurtleMail_AutoCompleteNames[ key ][ char ] = nil
-      end
-    end
-
-    m.addAutoCompleteName( api.UnitName "player" )
-  end
-end
-
-function m.hook.GetInboxHeaderInfo( ... )
+function Mail.hook.GetInboxHeaderInfo( ... )
   local sender, canReply = arg[ 3 ], arg[ 12 ]
   if sender and canReply then
-    m.addAutoCompleteName( sender )
+    m.add_auto_complete_name( sender )
   end
-  return orig.GetInboxHeaderInfo( unpack( arg ) )
+  return m.orig.GetInboxHeaderInfo( unpack( arg ) )
 end
 
-function m.hook.OpenMail_Reply( ... )
+function Mail.hook.OpenMail_Reply( ... )
   api.TurtleMail_To = nil
-  return orig.OpenMail_Reply( unpack( arg ) )
+  return m.orig.OpenMail_Reply( unpack( arg ) )
 end
 
-function m.hook.InboxFrame_Update()
-  orig.InboxFrame_Update()
+function Mail.hook.InboxFrame_Update()
+  m.orig.InboxFrame_Update()
   for i = 1, 7 do
     -- hack for tooltip update
     api[ "MailItem" .. i ]:Hide()
     api[ "MailItem" .. i ]:Show()
   end
 
-  do
-    local currentPage = api.InboxFrame.pageNum
-    local totalPages = math.ceil( api.GetInboxNumItems() / api.INBOXITEMS_TO_DISPLAY )
-    local text = totalPages > 0 and (currentPage .. "/" .. totalPages) or ("Empty")
-    api.InboxTitleText:SetText( "Inbox [" .. text .. "]" )
-  end
+  local currentPage = api.InboxFrame.pageNum
+  local totalPages = math.ceil( api.GetInboxNumItems() / api.INBOXITEMS_TO_DISPLAY )
+  local text = totalPages > 0 and (currentPage .. "/" .. totalPages) or api.EMPTY
+  api.InboxTitleText:SetText( api.INBOX .. " [" .. text .. "]" )
 
   Inbox_UpdateLock()
 end
 
-function m.hook.InboxFrame_OnClick( i )
+function Mail.hook.InboxFrame_OnClick( i )
   if Inbox_opening or arg1 == "RightButton" and ({ api.GetInboxHeaderInfo( i ) })[ 6 ] > 0 then
     this:SetChecked( nil )
   elseif arg1 == "RightButton" then
     Inbox_Open( i, true )
   else
-    return orig.InboxFrame_OnClick( i )
+    return m.orig.InboxFrame_OnClick( i )
   end
 end
 
-function m.hook.InboxFrameItem_OnEnter()
-  orig.InboxFrameItem_OnEnter()
+function Mail.hook.InboxFrameItem_OnEnter()
+  m.orig.InboxFrameItem_OnEnter()
   if api.GetInboxItem( this.index ) then
     api.GameTooltip:AddLine( api.ITEM_OPENABLE, "", 0, 1, 0 )
     api.GameTooltip:Show()
   end
 end
 
-function m.hook.SendMailFrame_Update()
+function Mail.hook.SendMailFrame_Update()
   local gap
   -- local last = 0 blizzlike
   local last = SendMail_NumAttachments()
@@ -384,7 +379,7 @@ function m.hook.SendMailFrame_Update()
     else
       api.SendMailCODAllButton:Disable()
       api.SendMailCODAllButtonText:SetTextColor( api.GRAY_FONT_COLOR.r, api.GRAY_FONT_COLOR.g, api.GRAY_FONT_COLOR.b )
-      api.SendMailMoneyText:SetText( api.COD_AMOUNT )
+      api.SendMailMoneyText:SetText( api.AMOUNT_TO_SEND )
     end
   else
     api.SendMailSendMoneyButton:SetChecked( 1 )
@@ -471,7 +466,7 @@ function m.hook.SendMailFrame_Update()
   api.SendMailFrame_CanSend()
 end
 
-function m.hook.SendMailRadioButton_OnClick( index )
+function Mail.hook.SendMailRadioButton_OnClick( index )
   if (index == 1) then
     api.SendMailSendMoneyButton:SetChecked( 1 );
     api.SendMailCODButton:SetChecked( nil );
@@ -492,48 +487,48 @@ function m.hook.SendMailRadioButton_OnClick( index )
   api.PlaySound( "igMainMenuOptionCheckBoxOn" );
 end
 
-function m.hook.ClickSendMailItemButton()
-  SendMail_SetAttachment( GetCursorItem() )
+function Mail.hook.ClickSendMailItemButton()
+  SendMail_SetAttachment( m.get_cursor_item() )
 end
 
-function m.hook.GetContainerItemInfo( bag, slot )
-  local ret = pack( orig.GetContainerItemInfo( bag, slot ) )
+function Mail.hook.GetContainerItemInfo( bag, slot )
+  local ret = pack( m.orig.GetContainerItemInfo( bag, slot ) )
   ret[ 3 ] = ret[ 3 ] or SendMail_Attached( bag, slot ) and 1 or nil
   return unpack( ret )
 end
 
-function m.hook.PickupContainerItem( bag, slot )
+function Mail.hook.PickupContainerItem( bag, slot )
   if SendMail_Attached( bag, slot ) then return end
-  if api.GetContainerItemInfo( bag, slot ) then SetCursorItem( { bag, slot } ) end
-  return orig.PickupContainerItem( bag, slot )
+  if api.GetContainerItemInfo( bag, slot ) then m.set_cursor_item( { bag, slot } ) end
+  return m.orig.PickupContainerItem( bag, slot )
 end
 
-function m.hook.SplitContainerItem( bag, slot, amount )
+function Mail.hook.SplitContainerItem( bag, slot, amount )
   if SendMail_Attached( bag, slot ) then return end
-  return orig.SplitContainerItem( bag, slot, amount )
+  return m.orig.SplitContainerItem( bag, slot, amount )
 end
 
-function m.hook.UseContainerItem( bag, slot, onself )
+function Mail.hook.UseContainerItem( bag, slot, onself )
   if SendMail_Attached( bag, slot ) then return end
   if api.IsShiftKeyDown() or api.IsControlKeyDown() or api.IsAltKeyDown() then
-    return orig.UseContainerItem( bag, slot, onself )
+    return m.orig.UseContainerItem( bag, slot, onself )
   elseif api.MailFrame:IsVisible() then
     api.MailFrameTab_OnClick( 2 )
     SendMail_SetAttachment { bag, slot }
   elseif api.TradeFrame:IsVisible() then
     for i = 1, 6 do
       if not api.GetTradePlayerItemLink( i ) then
-        orig.PickupContainerItem( bag, slot )
+        m.orig.PickupContainerItem( bag, slot )
         api.ClickTradeButton( i )
         return
       end
     end
   else
-    return orig.UseContainerItem( bag, slot, onself )
+    return m.orig.UseContainerItem( bag, slot, onself )
   end
 end
 
-function m.hook.SendMailFrame_CanSend()
+function Mail.hook.SendMailFrame_CanSend()
   if not SendMail_sending and string.len( api.SendMailNameEditBox:GetText() ) > 0 and (api.SendMailSendMoneyButton:GetChecked() and api.MoneyInputFrame_GetCopper( api.SendMailMoney ) or 0) + api.GetSendMailPrice() * math.max( 1, SendMail_NumAttachments() ) <= api.GetMoney() then
     MailMailButton:Enable()
   else
@@ -562,7 +557,8 @@ function MailMailButton_OnClick()
   SendMail_Send()
 end
 
-function SendMail_Load()
+function Mail.sendmail_load()
+  api.SendMailFrame:EnableMouse( false )
   api.SendMailFrame:CreateTexture( "MailHorizontalBarLeft", "BACKGROUND" )
   api.SendMailFrame:CreateTexture( "MailHorizontalBarRight", "BACKGROUND" )
   ---@diagnostic disable-next-line: undefined-global
@@ -667,9 +663,7 @@ function SendMail_Load()
   end
 
   api.SendMailCODAllButtonText:SetText( "  " .. L[ "All mails" ] )
-  api.SendMailCODAllButton:SetScript( "OnClick", function()
-    m.set_cod_text()
-  end )
+  api.SendMailCODAllButton:SetScript( "OnClick", m.set_cod_text )
 
   do
     local orig_script = api.SendMailNameEditBox:GetScript( "OnTextChanged" )
@@ -724,13 +718,13 @@ function SendMail_Attached( bag, slot )
   end
 end
 
-function m.AttachmentButton_OnClick()
+function Mail.AttachmentButton_OnClick()
   local attachedItem = this.item
-  local cursorItem = GetCursorItem()
+  local cursorItem = m.get_cursor_item()
   if SendMail_SetAttachment( cursorItem, this ) then
     if attachedItem then
-      if arg1 == "LeftButton" then SetCursorItem( attachedItem ) end
-      orig.PickupContainerItem( unpack( attachedItem ) )
+      if arg1 == "LeftButton" then m.set_cursor_item( attachedItem ) end
+      m.orig.PickupContainerItem( unpack( attachedItem ) )
       if arg1 ~= "LeftButton" then api.ClearCursor() end -- for the lock changed event
     end
   end
@@ -760,12 +754,12 @@ end
 
 function SendMail_PickupMailable( item )
   api.ClearCursor()
-  orig.ClickSendMailItemButton()
+  m.orig.ClickSendMailItemButton()
   api.ClearCursor()
-  orig.PickupContainerItem( unpack( item ) )
-  orig.ClickSendMailItemButton()
+  m.orig.PickupContainerItem( unpack( item ) )
+  m.orig.ClickSendMailItemButton()
   local mailable = api.GetSendMailItem() and true or false
-  orig.ClickSendMailItemButton()
+  m.orig.ClickSendMailItemButton()
   return mailable
 end
 
@@ -816,10 +810,10 @@ function SendMail_Send()
   local item = table.remove( SendMail_state.attachments, 1 )
   if item then
     api.ClearCursor()
-    orig.ClickSendMailItemButton()
+    m.orig.ClickSendMailItemButton()
     api.ClearCursor()
-    orig.PickupContainerItem( unpack( item ) )
-    orig.ClickSendMailItemButton()
+    m.orig.PickupContainerItem( unpack( item ) )
+    m.orig.ClickSendMailItemButton()
 
     if not api.GetSendMailItem() then
       api.DEFAULT_CHAT_FRAME:AddMessage( "|cffabd473TurtleMail|r: " .. api.ERROR_CAPS, 1, 0, 0 )
@@ -894,7 +888,7 @@ do
     end
   end
 
-  function m.SelectMatch( i )
+  function Mail.SelectMatch( i )
     index = i
     complete()
     api.MailAutoCompleteBox:Hide()
@@ -958,7 +952,45 @@ do
   end
 end
 
--- ************
+function Mail.dump( o )
+  if not o then return "nil" end
+  if type( o ) ~= 'table' then return tostring( o ) end
+
+  local entries = 0
+  local s = "{"
+
+  for k, v in pairs( o ) do
+    if (entries == 0) then s = s .. " " end
+    local key = type( k ) ~= "number" and '"' .. k .. '"' or k
+    if (entries > 0) then s = s .. ", " end
+    s = s .. "[" .. key .. "] = " .. Mail.dump( v )
+    entries = entries + 1
+  end
+
+  if (entries > 0) then s = s .. " " end
+  return s .. "}"
+end
+
+function Mail.debug( m1, m2, m3 )
+  if m.debug_enabled then
+    local messages = ""
+    for _, message in { m1, m2, m3 } do
+      if message then
+        messages = messages == "" and "" or messages .. ", "
+        if type( message ) == 'table' then
+          messages = messages .. Mail.dump( message )
+        else
+          messages = messages .. message
+        end
+      end
+    end
+
+    api.DEFAULT_CHAT_FRAME:AddMessage( string.format( "|cffabd473TurtleMail|r: %s", messages ) )
+  end
+end
+
+Mail.init()
+
 -- Localization
 do
   local function defaultFunc( _, key )
@@ -973,34 +1005,34 @@ do
   L[ "All mails" ] = nil
 
   if api.GetLocale() == "frFR" then
-    L[ "collected" ] = "collecté"
-    L[ "1st mail" ] = "1er courrier"
-    L[ "each mail" ] = "chaque courrier"
+    L[ "collected" ]      = "collecté"
+    L[ "1st mail" ]       = "1er courrier"
+    L[ "each mail" ]      = "chaque courrier"
     L[ "Money received" ] = "Argent reçu"
-    L[ "All mails" ] = "Tous les courriers"
+    L[ "All mails" ]      = "Tous les courriers"
   end
 
   if api.GetLocale() == "esES" then
-    L[ "collected" ] = "recogido"
-    L[ "1st mail" ] = "1er correo"
-    L[ "each mail" ] = "cada correo"
+    L[ "collected" ]      = "recogido"
+    L[ "1st mail" ]       = "1er correo"
+    L[ "each mail" ]      = "cada correo"
     L[ "Money received" ] = "Dinero recibido"
-    L[ "All mails" ] = "Todos los correos"
+    L[ "All mails" ]      = "Todos los correos"
   end
 
   if api.GetLocale() == "deDE" then
-    L[ "collected" ] = "gesammelt"
-    L[ "1st mail" ] = "1. Mail"
-    L[ "each mail" ] = "jede Mail"
+    L[ "collected" ]      = "gesammelt"
+    L[ "1st mail" ]       = "1. Mail"
+    L[ "each mail" ]      = "jede Mail"
     L[ "Money received" ] = "Geld erhalten"
-    L[ "All mails" ] = "Alle E-Mails"
+    L[ "All mails" ]      = "Alle E-Mails"
   end
 
   if api.GetLocale() == "ruRU" then
-    L[ "collected" ] = "собрано"
-    L[ "1st mail" ] = "1-я почта"
-    L[ "each mail" ] = "каждая почта"
+    L[ "collected" ]      = "собрано"
+    L[ "1st mail" ]       = "1-я почта"
+    L[ "each mail" ]      = "каждая почта"
     L[ "Money received" ] = "Деньги получены"
-    L[ "All mails" ] = "Bce почта"
+    L[ "All mails" ]      = "Bce почта"
   end
 end
