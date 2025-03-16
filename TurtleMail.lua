@@ -3,7 +3,6 @@ Mail = Mail or api.CreateFrame( 'Frame', nil, api.MailFrame )
 local m = Mail
 local getn = table.getn ---@diagnostic disable-line: deprecated
 local function pack( ... ) return arg end
-local L = {}
 
 local ATTACHMENTS_MAX = 21
 local ATTACHMENTS_PER_ROW_SEND = 7
@@ -990,49 +989,3 @@ function Mail.debug( m1, m2, m3 )
 end
 
 Mail.init()
-
--- Localization
-do
-  local function defaultFunc( _, key )
-    return key;
-  end
-  setmetatable( L, { __index = defaultFunc } );
-
-  L[ "collected" ] = nil
-  L[ "1st mail" ] = nil
-  L[ "each mail" ] = nil
-  L[ "Money received" ] = nil
-  L[ "All mails" ] = nil
-
-  if api.GetLocale() == "frFR" then
-    L[ "collected" ]      = "collecté"
-    L[ "1st mail" ]       = "1er courrier"
-    L[ "each mail" ]      = "chaque courrier"
-    L[ "Money received" ] = "Argent reçu"
-    L[ "All mails" ]      = "Tous les courriers"
-  end
-
-  if api.GetLocale() == "esES" then
-    L[ "collected" ]      = "recogido"
-    L[ "1st mail" ]       = "1er correo"
-    L[ "each mail" ]      = "cada correo"
-    L[ "Money received" ] = "Dinero recibido"
-    L[ "All mails" ]      = "Todos los correos"
-  end
-
-  if api.GetLocale() == "deDE" then
-    L[ "collected" ]      = "gesammelt"
-    L[ "1st mail" ]       = "1. Mail"
-    L[ "each mail" ]      = "jede Mail"
-    L[ "Money received" ] = "Geld erhalten"
-    L[ "All mails" ]      = "Alle E-Mails"
-  end
-
-  if api.GetLocale() == "ruRU" then
-    L[ "collected" ]      = "собрано"
-    L[ "1st mail" ]       = "1-я почта"
-    L[ "each mail" ]      = "каждая почта"
-    L[ "Money received" ] = "Деньги получены"
-    L[ "All mails" ]      = "Bce почта"
-  end
-end

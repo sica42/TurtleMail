@@ -4,7 +4,8 @@
     "arg1",   
     "_",
     "this",
-    "event"
+    "event",
+    "GetLocale"
   ],
   "Lua.workspace.checkThirdParty": false,
   "Lua.workspace.ignoreDir": [],
