@@ -4,6 +4,7 @@ An extension to the Blizzard mail interface which
 - **Automatically opens mail, very rapidly**
 - **Mails multiple items at once, very rapidly**
 - **Autocompletes recipient names**
+- **Icons to show if mail was returned or is from**
 - **Shows collected gold from opened mails**
 - **Apply COD to 1st or all mails**
 
