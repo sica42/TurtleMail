@@ -189,6 +189,98 @@
 	<Button name="MailAttachment20" parent="SendMailFrame" inherits="MailAttachment"/>
 	<Button name="MailAttachment21" parent="SendMailFrame" inherits="MailAttachment"/>
 
+	<Frame name="TurtleMailReturnedArrowTemplate" virtual="true" hidden="true">
+		<Size>
+			<AbsDimension x="32" y="32"/>
+		</Size>
+		<Anchors>
+			<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT">
+				<Offset>
+					<AbsDimension x="0" y="8"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentTexture" file="Interface\Addons\TurtleMail\TurtleMail-RetArrow.blp">
+					<Size>
+						<AbsDimension x="32" y="32"/>
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnEnter>
+				GameTooltip:SetOwner( this, "ANCHOR_RIGHT" );
+				GameTooltip:SetText( L[ "This mail was returned to you." ] );
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+		</Scripts>
+	</Frame>
+
+	<Frame name="TurtleMailReturnedArrow1" parent="MailItem1ExpireTime" hidden="true" inherits="TurtleMailReturnedArrowTemplate"/>
+	<Frame name="TurtleMailReturnedArrow2" parent="MailItem2ExpireTime" hidden="true" inherits="TurtleMailReturnedArrowTemplate"/>
+	<Frame name="TurtleMailReturnedArrow3" parent="MailItem3ExpireTime" hidden="true" inherits="TurtleMailReturnedArrowTemplate"/>
+	<Frame name="TurtleMailReturnedArrow4" parent="MailItem4ExpireTime" hidden="true" inherits="TurtleMailReturnedArrowTemplate"/>
+	<Frame name="TurtleMailReturnedArrow5" parent="MailItem5ExpireTime" hidden="true" inherits="TurtleMailReturnedArrowTemplate"/>
+	<Frame name="TurtleMailReturnedArrow6" parent="MailItem6ExpireTime" hidden="true" inherits="TurtleMailReturnedArrowTemplate"/>
+	<Frame name="TurtleMailReturnedArrow7" parent="MailItem7ExpireTime" hidden="true" inherits="TurtleMailReturnedArrowTemplate"/>
+
+	<Frame name="TurtleMailAuctionTemplate" virtual="true" hidden="true">
+		<Size>
+			<AbsDimension x="32" y="32"/>
+		</Size>
+		<Anchors>
+			<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT">
+				<Offset>
+					<AbsDimension x="4" y="8"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentTexture" file="Interface\Addons\TurtleMail\TurtleMail-AH.blp">
+					<Size>
+						<AbsDimension x="28" y="28"/>
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER">
+							<Offset>
+								<AbsDimension x="-4" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnEnter>
+				GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
+				GameTooltip:SetText( L[ "This mail was sent by an auctionhouse." ] );
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+		</Scripts>
+	</Frame>
+	
+	<Frame name="TurtleMailAuctionIcon1" parent="MailItem1ExpireTime" hidden="true" inherits="TurtleMailAuctionTemplate"/>
+	<Frame name="TurtleMailAuctionIcon2" parent="MailItem2ExpireTime" hidden="true" inherits="TurtleMailAuctionTemplate"/>
+	<Frame name="TurtleMailAuctionIcon3" parent="MailItem3ExpireTime" hidden="true" inherits="TurtleMailAuctionTemplate"/>
+	<Frame name="TurtleMailAuctionIcon4" parent="MailItem4ExpireTime" hidden="true" inherits="TurtleMailAuctionTemplate"/>
+	<Frame name="TurtleMailAuctionIcon5" parent="MailItem5ExpireTime" hidden="true" inherits="TurtleMailAuctionTemplate"/>
+	<Frame name="TurtleMailAuctionIcon6" parent="MailItem6ExpireTime" hidden="true" inherits="TurtleMailAuctionTemplate"/>
+	<Frame name="TurtleMailAuctionIcon7" parent="MailItem7ExpireTime" hidden="true" inherits="TurtleMailAuctionTemplate"/>
+
 	<CheckButton name="SendMailCODAllButton" parent="SendMailFrame" inherits="OptionsCheckButtonTemplate" >
 		<Size x="16" y="16"/>
 		<Anchors>

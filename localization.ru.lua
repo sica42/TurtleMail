@@ -4,4 +4,6 @@ if GetLocale() == "ruRU" then
   L[ "each mail" ]      = "Каждое письмо"
   L[ "Money received" ] = "Деньги получены"
   L[ "All mails" ]      = "Bce письма"
+  L[ "This mail was returned to you." ] = "Это письмо было возвращено вам."
+  L[ "This mail was sent by an auctionhouse." ] = "Это письмо было отправлено аукционным домом."
 end

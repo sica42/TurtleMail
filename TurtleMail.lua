@@ -8,6 +8,16 @@ local ATTACHMENTS_MAX = 21
 local ATTACHMENTS_PER_ROW_SEND = 7
 local ATTACHMENTS_MAX_ROWS_SEND = 3
 
+local INBOX_AUCTIONHOUSES = {
+  [ "Stormwind Auction House" ] = true,
+  [ "Alliance Auction House" ] = true,
+  [ "Darnassus Auction House" ] = true,
+  [ "Undercity Auction House" ] = true,
+  [ "Thunder Bluff  Auction House" ] = true,
+  [ "Horde Auction House" ] = true,
+  [ "Blackwater Auction House" ] = true,
+}
+
 m.timer = 0
 m.orig = {}
 m.hooks = {}
@@ -164,6 +174,23 @@ function Mail.MAIL_INBOX_UPDATE()
   if Inbox_opening then
     m.inbox_update = true
   end
+  
+  for i = 1, 7 do
+    local index = (i + (api.InboxFrame.pageNum - 1) * 7)
+    if index <= api.GetInboxNumItems() then
+      local _, _, sender, _, _, _, _, _, _, wasReturned = api.GetInboxHeaderInfo( index )
+      if INBOX_AUCTIONHOUSES[ sender ] then
+        api[ "TurtleMailAuctionIcon" .. i ]:Show()
+      else
+        api[ "TurtleMailAuctionIcon" .. i ]:Hide()
+      end
+      if wasReturned then
+        api[ "TurtleMailReturnedArrow" .. i ]:Show()
+      else
+        api[ "TurtleMailReturnedArrow" .. i ]:Hide()
+      end
+    end
+  end
 end
 
 ---@param name string
@@ -182,6 +209,11 @@ function Mail.inbox_load()
 
   api.MailFrame:SetMovable( true )
   api.MailFrame:SetScript( "OnDragStop", m.on_drag_stop )
+
+  for i = 1, 7 do
+    api[ "TurtleMailAuctionIcon" .. i .. "Texture" ]:SetVertexColor( api.NORMAL_FONT_COLOR.r, api.NORMAL_FONT_COLOR.g, api.NORMAL_FONT_COLOR.b )
+    api[ "TurtleMailReturnedArrow" .. i .. "Texture" ]:SetVertexColor( api.NORMAL_FONT_COLOR.r, api.NORMAL_FONT_COLOR.g, api.NORMAL_FONT_COLOR.b )
+  end
 end
 
 function Inbox_OpenAll()

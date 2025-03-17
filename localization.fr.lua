@@ -4,4 +4,6 @@ if GetLocale() == "frFR" then
   L[ "each mail" ]      = "chaque message"
   L[ "Money received" ] = "Argent reçu"
   L[ "All mails" ]      = "Tous mails"
+  L[ "This mail was returned to you." ] = "Ce courrier vous a été retourné."
+  L[ "This mail was sent by an auctionhouse." ] = "Ce courrier a été envoyé par une maison de vente aux enchères."
 end
