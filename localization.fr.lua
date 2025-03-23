@@ -1,3 +1,6 @@
+TurtleMail = TurtleMail or {}
+local L = TurtleMail.L
+
 if GetLocale() == "frFR" then
   L[ "collected" ]      = "collecté"
   L[ "1st mail" ]       = "1er message"

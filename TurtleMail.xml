@@ -5,15 +5,16 @@
 	<Script file="localization.de.lua"/>
 	<Script file="localization.es.lua"/>
 	<Script file="localization.ru.lua"/>
-	<Script file="TurtleMail.lua"/>
+	<Script file="Calendar.lua"/>
+	<Script file="TurtleMail.lua"/>	
 
-	<Button name="MailAutoCompleteButtonTemplate" virtual="true">
+	<Button name="TurtleMailAutoCompleteButtonTemplate" virtual="true">
 		<Size>
 			<AbsDimension x="120" y="14"/>
 		</Size>
 		<Scripts>
 			<OnClick>
-				Mail.SelectMatch(this:GetID())
+				TurtleMail.select_match( this:GetID() )
 			</OnClick>
 		</Scripts>
 		<NormalFont inherits="GameFontNormal"/>
@@ -53,7 +54,7 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button name="MailAutoCompleteButton1" inherits="MailAutoCompleteButtonTemplate" id="1">
+			<Button name="MailAutoCompleteButton1" inherits="TurtleMailAutoCompleteButtonTemplate" id="1">
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
@@ -63,22 +64,22 @@
 					</Anchor>
 				</Anchors>
 			</Button>
-			<Button name="MailAutoCompleteButton2" inherits="MailAutoCompleteButtonTemplate" id="2">
+			<Button name="MailAutoCompleteButton2" inherits="TurtleMailAutoCompleteButtonTemplate" id="2">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="MailAutoCompleteButton1" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="MailAutoCompleteButton3" inherits="MailAutoCompleteButtonTemplate" id="3">
+			<Button name="MailAutoCompleteButton3" inherits="TurtleMailAutoCompleteButtonTemplate" id="3">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="MailAutoCompleteButton2" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="MailAutoCompleteButton4" inherits="MailAutoCompleteButtonTemplate" id="4">
+			<Button name="MailAutoCompleteButton4" inherits="TurtleMailAutoCompleteButtonTemplate" id="4">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="MailAutoCompleteButton3" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="MailAutoCompleteButton5" inherits="MailAutoCompleteButtonTemplate" id="5">
+			<Button name="MailAutoCompleteButton5" inherits="TurtleMailAutoCompleteButtonTemplate" id="5">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="MailAutoCompleteButton4" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
@@ -143,13 +144,13 @@
 				this:RegisterForDrag('LeftButton')
 			</OnLoad>
 			<OnReceiveDrag>
-				Mail.AttachmentButton_OnClick()
+				TurtleMail.attachment_button_on_click()
 			</OnReceiveDrag>
 			<OnDragStart>
-				Mail.AttachmentButton_OnClick()
+				TurtleMail.attachment_button_on_click()
 			</OnDragStart>
 			<OnClick>
-				Mail.AttachmentButton_OnClick()
+				TurtleMail.attachment_button_on_click()
 				this:GetScript('OnEnter')()
 			</OnClick>
 			<OnEnter>
@@ -310,4 +311,539 @@
 			</Layer>
 		</Layers>
 	</Frame>
+
+	<Frame name="TurtleMailLogItemTemplate" virtual="true" hidden="true">
+		<Size>
+			<AbsDimension x="100" y="30"/>
+		</Size>
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+			<Anchor point="RIGHT">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="$parentBackground" file="Interface/Buttons/WHITE8x8">
+					<Size>
+						<AbsDimension x="10" y="1"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT">
+							<Offset>
+								<AbsDimension x="0" y="-1"/>
+							</Offset>
+						</Anchor>
+						<Anchor point="RIGHT" />
+					</Anchors>
+				</Texture>
+				<Texture name="$parentStatus">
+					<Size>
+						<AbsDimension x="28" y="28"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPRIGHT">
+							<Offset>
+								<AbsDimension x="4" y="-10"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString name="$parentTimeStamp" inherits="GameFontNormal">
+					<Size>
+						<AbsDimension x="80" y="14"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="30" y="-15"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentMoney" inherits="GameFontNormal">
+					<Size>
+						<AbsDimension x="70" y="14"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="130" y="-15"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentParticipant" inherits="GameFontNormal">
+					<Size>
+						<AbsDimension x="100" y="14"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPRIGHT">
+							<Offset>
+								<AbsDimension x="-2" y="-15"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentSubject" inherits="GameFontNormal">
+					<Size>
+						<AbsDimension x="270" y="14"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="30" y="-1"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame name="$parentIcon">
+				<Size>
+					<AbsDimension x="28" y="28"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="1" y="-1"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture name="$parentTexture" file="Interface/Icons/INV_Scroll_01">
+							<Size>
+								<AbsDimension x="28" y="28"/>
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+		</Frames>
+	</Frame>
+
+	<Frame name="TurtleMailLogFrame" parent="MailFrame" hidden="true">
+		<Size>
+			<AbsDimension x="384" y="512"/>
+		</Size>
+		<Anchors>
+			<Anchor point="TOPLEFT"/>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<FontString name="TurtleMailLogTitleText" inherits="GameFontNormal">
+					<Size>
+						<AbsDimension x="224" y="14"/>
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER">
+							<Offset>
+								<AbsDimension x="6" y="230"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="TurtleMailLogStatusText" inherits="GameFontNormal">
+					<Size>
+						<AbsDimension x="150" y="14"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="27" y="-414" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="TurtleMailLogFiltersButton" inherits="UIPanelButtonTemplate" text="Filters">
+				<Size>
+					<AbsDimension x="70" y="22"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="75" y="-70"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						TurtleMail.log.filter_dropdown()
+					</OnClick>
+				</Scripts>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture name="$parentArrow" file="Interface\Addons\TurtleMail\TurtleMail-DownArrow.tga">
+							<Size>
+								<AbsDimension x="12" y="12"/>
+							</Size>
+							<Anchors>
+								<Anchor point="RIGHT">
+								<Offset>
+									<AbsDimension x="-8" y="-1"/>
+								</Offset>
+								</Anchor>
+							</Anchors>							
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+
+			<Button name="TurtleMailLogStartTime">
+				<Size>
+					<AbsDimension x="80" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="127" y="-45"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="$parentTitle" inherits="GameFontNormal" text="Period">
+							<Anchors>
+								<Anchor point="LEFT">
+									<Offset>
+										<AbsDimension x="-50" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<FontString name="$parentText" inherits="GameFontNormal" text="13.12.2025">
+							<Anchors>
+								<Anchor point="LEFT">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<Texture name="$parentLeft" file="Interface\Common\Common-Input-Border">
+							<Size>
+								<AbsDimension x="8" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT">
+									<Offset>
+										<AbsDimension x="-8" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<TexCoords left="0" right="0.0625" top="0" bottom="0.625"/>
+						</Texture>
+						<Texture name="$parentMiddle" file="Interface\Common\Common-Input-Border">
+							<Size>
+								<AbsDimension x="88" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parentLeft" relativePoint="RIGHT"/>
+							</Anchors>
+							<TexCoords left="0.0625" right="0.9375" top="0" bottom="0.625"/>
+						</Texture>
+						<Texture name="$parentRight" file="Interface\Common\Common-Input-Border">
+							<Size>
+								<AbsDimension x="8" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parentMiddle" relativePoint="RIGHT"/>
+							</Anchors>
+							<TexCoords left="0.9375" right="1.0" top="0" bottom="0.625"/>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="$parentButton">
+						<Size>
+							<AbsDimension x="24" y="24"/>
+						</Size>
+						<Anchors>
+							<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+								<Offset>
+									<AbsDimension x="-5" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>
+								TurtleMail.log.show_calendar( "Start" )
+							</OnClick>
+						</Scripts>
+						<NormalTexture name="$parentNormalTexture" file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Up">
+							<Size>
+								<AbsDimension x="24" y="24"/>
+							</Size>
+							<Anchors>
+								<Anchor point="RIGHT"/>
+							</Anchors>
+						</NormalTexture>
+						<PushedTexture name="$parentPushedTexture" file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Down">
+							<Size>
+								<AbsDimension x="24" y="24"/>
+							</Size>
+							<Anchors>
+								<Anchor point="RIGHT"/>
+							</Anchors>
+						</PushedTexture>
+						<DisabledTexture name="$parentDisabledTexture" file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Disabled">
+							<Size>
+								<AbsDimension x="24" y="24"/>
+							</Size>
+							<Anchors>
+								<Anchor point="RIGHT"/>
+							</Anchors>
+						</DisabledTexture>
+						<HighlightTexture name="$parentHighlightTexture" file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD">
+							<Size>
+								<AbsDimension x="24" y="24"/>
+							</Size>
+							<Anchors>
+								<Anchor point="RIGHT"/>
+							</Anchors>
+						</HighlightTexture>
+					</Button>
+				</Frames>
+			</Button>
+
+			<Button name="TurtleMailLogEndTime">
+				<Size>
+					<AbsDimension x="80" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="245" y="-45"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="$parentTitle" inherits="GameFontNormal" text="-">
+							<Anchors>
+								<Anchor point="LEFT">
+									<Offset>
+										<AbsDimension x="-17" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<FontString name="$parentText" inherits="GameFontNormal" text="13.12.2025">
+							<Anchors>
+								<Anchor point="LEFT">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<Texture name="$parentLeft" file="Interface\Common\Common-Input-Border">
+							<Size>
+								<AbsDimension x="8" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT">
+									<Offset>
+										<AbsDimension x="-8" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<TexCoords left="0" right="0.0625" top="0" bottom="0.625"/>
+						</Texture>
+						<Texture name="$parentMiddle" file="Interface\Common\Common-Input-Border">
+							<Size>
+								<AbsDimension x="88" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parentLeft" relativePoint="RIGHT"/>
+							</Anchors>
+							<TexCoords left="0.0625" right="0.9375" top="0" bottom="0.625"/>
+						</Texture>
+						<Texture name="$parentRight" file="Interface\Common\Common-Input-Border">
+							<Size>
+								<AbsDimension x="8" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parentMiddle" relativePoint="RIGHT"/>
+							</Anchors>
+							<TexCoords left="0.9375" right="1.0" top="0" bottom="0.625"/>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="$parentButton">
+						<Size>
+							<AbsDimension x="24" y="24"/>
+						</Size>
+						<Anchors>
+							<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+								<Offset>
+									<AbsDimension x="-5" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>
+								TurtleMail.log.show_calendar( "End" )
+							</OnClick>
+						</Scripts>
+						<NormalTexture name="$parentNormalTexture" file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Up">
+							<Size>
+								<AbsDimension x="24" y="24"/>
+							</Size>
+							<Anchors>
+								<Anchor point="RIGHT"/>
+							</Anchors>
+						</NormalTexture>
+						<PushedTexture name="$parentPushedTexture" file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Down">
+							<Size>
+								<AbsDimension x="24" y="24"/>
+							</Size>
+							<Anchors>
+								<Anchor point="RIGHT"/>
+							</Anchors>
+						</PushedTexture>
+						<DisabledTexture name="$parentDisabledTexture" file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Disabled">
+							<Size>
+								<AbsDimension x="24" y="24"/>
+							</Size>
+							<Anchors>
+								<Anchor point="RIGHT"/>
+							</Anchors>
+						</DisabledTexture>
+						<HighlightTexture name="$parentHighlightTexture" file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD">
+							<Size>
+								<AbsDimension x="24" y="24"/>
+							</Size>
+							<Anchors>
+								<Anchor point="RIGHT"/>
+							</Anchors>
+						</HighlightTexture>
+					</Button>
+				</Frames>
+			</Button>
+			<Frame name="TurtleMailLogPlayersDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="231" y="-75"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						TurtleMail.log.players_dropdown_on_load()
+					</OnLoad>
+					<OnShow>
+						TurtleMail.log.players_dropdown_on_load()
+					</OnShow>
+				</Scripts>
+			</Frame>
+			<ScrollFrame name="TurtleMailLogScrollFrame" inherits="UIPanelScrollFrameTemplate">
+				<Size>
+					<AbsDimension x="296" y="312"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="23" y="-98"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</ScrollFrame>
+			<Frame name="TurtleMailLogEntriesFrame" enableMouse="true">
+				<Size>
+					<AbsDimension x="301" y="255"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="23" y="-98"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Frames>
+					<Frame name="TurtleMailLogItem1" parent="TurtleMailLogEntriesFrame" inherits="TurtleMailLogItemTemplate"/>
+					<Frame name="TurtleMailLogItem2" parent="TurtleMailLogEntriesFrame" inherits="TurtleMailLogItemTemplate"/>
+					<Frame name="TurtleMailLogItem3" parent="TurtleMailLogEntriesFrame" inherits="TurtleMailLogItemTemplate"/>
+					<Frame name="TurtleMailLogItem4" parent="TurtleMailLogEntriesFrame" inherits="TurtleMailLogItemTemplate"/>
+					<Frame name="TurtleMailLogItem5" parent="TurtleMailLogEntriesFrame" inherits="TurtleMailLogItemTemplate"/>
+					<Frame name="TurtleMailLogItem6" parent="TurtleMailLogEntriesFrame" inherits="TurtleMailLogItemTemplate"/>
+					<Frame name="TurtleMailLogItem7" parent="TurtleMailLogEntriesFrame" inherits="TurtleMailLogItemTemplate"/>
+					<Frame name="TurtleMailLogItem8" parent="TurtleMailLogEntriesFrame" inherits="TurtleMailLogItemTemplate"/>
+					<Frame name="TurtleMailLogItem9" parent="TurtleMailLogEntriesFrame" inherits="TurtleMailLogItemTemplate"/>
+					<Frame name="TurtleMailLogItem10" parent="TurtleMailLogEntriesFrame" inherits="TurtleMailLogItemTemplate"/>
+				</Frames>
+			</Frame>
+			<Button name="TurtleMailLogSentButton" inherits="UIPanelButtonTemplate" text="Sent">
+				<Size>
+					<AbsDimension x="80" y="22"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-39" y="80"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						TurtleMail.log.populate( "Sent" )
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="TurtleMailLogReceivedButton" inherits="UIPanelButtonTemplate" text="Received">
+				<Size>
+					<AbsDimension x="80" y="22"/>
+				</Size>
+				<Anchors>
+					<Anchor point="RIGHT" relativeTo="SendMailCancelButton" relativePoint="LEFT">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						TurtleMail.log.populate( "Received" )
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+
+	<Button name="MailFrameTab3" inherits="FriendsFrameTabTemplate" id="3" parent="MailFrame" text="Log">
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="MailFrameTab2" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="-8" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnClick>
+				MailFrameTab_OnClick()
+			</OnClick>
+		</Scripts>
+	</Button>
 </Ui>

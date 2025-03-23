@@ -5,8 +5,12 @@
     "_",
     "this",
     "event",
-    "GetLocale"
+    "GetLocale",
+    "time",
+    "date",
+    "mod"
   ],
+  "Lua.runtime.version": "Lua 5.1",
   "Lua.workspace.checkThirdParty": false,
   "Lua.workspace.ignoreDir": [],
   "workspace.library": [],

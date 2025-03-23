@@ -1,3 +1,6 @@
+TurtleMail = TurtleMail or {}
+local L = TurtleMail.L
+
 if GetLocale() == "ruRU" then
   L[ "collected" ]      = "собрано"
   L[ "1st mail" ]       = "1-e письмо"

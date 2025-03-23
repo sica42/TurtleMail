@@ -1,4 +1,7 @@
-L = {}
+TurtleMail = TurtleMail or {}
+
+local L= {}
+TurtleMail.L = L
 setmetatable( L, { __index = function( _, key) return key end } );
 
 L[ "collected" ] = nil
@@ -8,3 +11,22 @@ L[ "Money received" ] = nil
 L[ "All mails" ] = nil
 L[ "This mail was returned to you." ] = nil
 L[ "This mail was sent by an auctionhouse." ] = nil
+L[ "Log" ] = nil
+L[ "Received" ] = nil
+L[ "Sent" ] = nil
+L[ "Auction House" ] = nil
+L[ "Returned" ] = nil
+L[ "Help" ] = nil
+L[ "Toggle logging on/off" ] = nil
+L[ "Clear sent log" ] = nil
+L[ "Clear received log" ] = nil
+L[ "Logging is enabled." ] = nil
+L[ "Logging is disabled." ] = nil
+L[ "Sent log cleared." ] = nil
+L[ "Received log cleared." ] = nil
+L[ "AH" ] = "Auction House"
+L[ "COD" ] = "C.O.D."
+L[ "Money" ] = "Money Attached"
+L[ "Players" ] = nil
+L[ "date_format" ] = "%d.%m.%Y"
+L[ "time_format" ] = "%H:%M"
