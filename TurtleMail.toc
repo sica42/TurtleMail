@@ -2,7 +2,7 @@
 ## Interface: 11200
 ## Title: |cffabd473Turtle|cffffffffMail
 ## Author: shirsig/sica
-## Version: 1.4
+## Version: 1.4.1
 ## Notes: Mailbox enhancement
 ## SavedVariables: TurtleMail_AutoCompleteNames
 ## SavedVariablesPerCharacter: TurtleMail_To TurtleMail_Point TurtleMail_Log

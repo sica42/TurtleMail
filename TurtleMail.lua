@@ -32,7 +32,7 @@ TurtleMail.calendar = m.Calendar.new()
 
 function TurtleMail:init()
   self.debug( "TurtleMail.init" )
-  self.update_frame = m.api.CreateFrame( 'Frame', "TurtleMailFrame", m.api.MailFrame )
+  self.update_frame = m.api.CreateFrame( "Frame", "TurtleMailFrame", m.api.MailFrame )
   self.update_frame:SetScript( "OnUpdate", self.on_update )
 
   -- Register events
@@ -231,7 +231,7 @@ function TurtleMail.ADDON_LOADED()
 
   if not m.api.TurtleMail_Log[ "Settings" ].first_run then
     m.api.TurtleMail_Log[ "Settings" ].first_run = version
-    m.info ( "New in |cffeda55fv1.4|r: Enable logging with |cffabd473/tm log|r" )
+    m.info( "New in |cffeda55fv1.4|r: Enable logging with |cffabd473/tm log|r" )
   end
 
   if m.api.UIPanelWindows[ "MailFrame" ] then
@@ -1027,6 +1027,7 @@ function TurtleMail.sendmail_send()
       m.sendmail_state.money = 0
     end
     if m.sendmail_state.cod then
+      m.sendmail_state.cod = amount
       m.api.SetSendMailCOD( amount )
     else
       m.sendmail_state.money = 0
@@ -1160,7 +1161,6 @@ function TurtleMail.log.load()
   m.api.TurtleMailLogTitleText:SetText( L[ "Log" ] )
   m.api.MailFrameTab3:SetText( L[ "Log" ] )
 
-  --local font_file = m.api.pfUI and m.api.pfUI.version and m.api.pfUI.font_default or "FONTS\\ARIALN.TTF"
   local font_file = m.pfui_skin_enabled and m.api.pfUI.font_default or "FONTS\\ARIALN.TTF"
   local font_size = 11
 
@@ -1487,7 +1487,8 @@ function TurtleMail.log.populate( log_type, index )
   end
 
   m.api.TurtleMailLogTitleText:SetText( string.format( "%s %s", L[ log_type ], L[ "Log" ] ) )
-  m.api.TurtleMailLogStatusText:SetText( string.format( "Showing %d-%d of %d", (index == 0 and log_count == 0) and index or index + 1, math.min( log_count, index + 10 ), log_count ) )
+  m.api.TurtleMailLogStatusText:SetText( string.format( "Showing %d-%d of %d", (index == 0 and log_count == 0) and index or index + 1,
+  math.min( log_count, index + 10 ), log_count ) )
 
   for i = 1, 10 do
     if log[ index + i ] then
@@ -1515,8 +1516,8 @@ function TurtleMail.log.populate( log_type, index )
       if entry.money and entry.money > 0 then
         local cod = (entry.cod and entry.cod > 0) and "COD: " or " "
         m.api[ "TurtleMailLogItem" .. i .. "Money" ]:SetText( cod .. m.format_money( entry.money ) )
-      elseif entry.cod and entry.cod > 0 then
-        m.api[ "TurtleMailLogItem" .. i .. "Money" ]:SetText( "COD: " .. m.format_money( entry.cod ) )
+      elseif entry.cod then
+        m.api[ "TurtleMailLogItem" .. i .. "Money" ]:SetText( "COD" .. (entry.cod > 1 and (": " .. m.format_money( entry.cod )) or "") )
       else
         m.api[ "TurtleMailLogItem" .. i .. "Money" ]:SetText( "" )
       end
