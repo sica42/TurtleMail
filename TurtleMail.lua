@@ -48,7 +48,7 @@ function TurtleMail:init()
     Settings = {
       Enabled = false,
       SentFilters = { Money = 1, COD = 1, Other = 1 },
-      ReceivedFilters = { Money = 1, COD = 1, Other = 1, Returned = 1, AHSold = 1, AHOutbid = 1, AHWon = 1, AHCancelled = 1, AHExpired = 1 }
+      ReceivedFilters = { Money = 1, COD = 1, Other = 1, Returned = 1, AH = 1, AHSold = 1, AHOutbid = 1, AHWon = 1, AHCancelled = 1, AHExpired = 1 }
     }
   }
   m.api.TurtleMail_AutoCompleteNames = {}
