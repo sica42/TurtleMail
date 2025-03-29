@@ -1,5 +1,5 @@
 TurtleMail = TurtleMail or {}
-local L = TurtleMail.L
+L = TurtleMail.L
 
 local m = TurtleMail
 local getn = table.getn ---@diagnostic disable-line: deprecated
