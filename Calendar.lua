@@ -170,7 +170,7 @@ function M.new()
 
     m.api.UIDropDownMenu_Initialize( dropdown, function()
       local valid_dates = get_valid_dates( name )
-      local info = m.api.UIDropDownMenu_CreateInfo()
+      local info = {}
 
       for i in pairs( valid_dates ) do
         info.arg1 = i
