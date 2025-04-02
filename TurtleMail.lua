@@ -280,7 +280,8 @@ end
 
 function TurtleMail.MAIL_SEND_SUCCESS()
   m.debug( "MAIL_SEND_SUCCESS" )
-  if m.sendmail_state then
+  if m.sendmail_state and not m.sendmail_state.sent then
+    m.sendmail_state.sent = true
     m.log.add( 'Sent', m.sendmail_state )
     m.add_auto_complete_name( m.sendmail_state.to )
   end
@@ -1021,6 +1022,7 @@ function TurtleMail.sendmail_send()
 
   local amount = m.sendmail_state.money
   m.sendmail_state.sent_money = m.sendmail_state.money
+  m.sendmail_state.sent = false
 
   if amount > 0 then
     if not m.api.SendMailCODAllButton:GetChecked() then
