@@ -353,7 +353,7 @@ function TurtleMail.set_cod_text()
 
   --if not m.api.pfUI or not m.api.pfUI.version then
   if not m.pfui_skin_enabled then
-    text = string.match( text, "^(.-)%s+%S+$" )
+    _, _, text = string.find( text, "^(.-)%s+%S+$" )
   end
 
   if m.api.SendMailCODAllButton:GetChecked() then
