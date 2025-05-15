@@ -651,9 +651,9 @@ function TurtleMail.hook.ClickSendMailItemButton()
 end
 
 function TurtleMail.hook.GetContainerItemInfo( bag, slot )
-  local ret = pack( m.orig.GetContainerItemInfo( bag, slot ) )
-  ret[ 3 ] = ret[ 3 ] or m.sendmail_attached( bag, slot ) and 1 or nil
-  return unpack( ret )
+  local texture, itemCount, locked, quality, readable = m.orig.GetContainerItemInfo( bag, slot )
+  locked = locked or m.sendmail_attached( bag, slot ) and 1 or nil
+  return texture, itemCount, locked, quality, readable
 end
 
 function TurtleMail.hook.PickupContainerItem( bag, slot )
