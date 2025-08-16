@@ -67,6 +67,7 @@ function TurtleMail.slash_command( args )
     m.api.DEFAULT_CHAT_FRAME:AddMessage( "|cffabd473/tm log|r " .. L[ "Toggle logging on/off" ] )
     m.api.DEFAULT_CHAT_FRAME:AddMessage( "|cffabd473/tm clear sent|r " .. L[ "Clear sent log" ] )
     m.api.DEFAULT_CHAT_FRAME:AddMessage( "|cffabd473/tm clear received|r " .. L[ "Clear received log" ] )
+    m.api.DEFAULT_CHAT_FRAME:AddMessage( "|cffabd473/tm clear names|r " .. L[ "Clear saved recipient names from autocomplete" ] )
     return
   end
 
@@ -93,6 +94,10 @@ function TurtleMail.slash_command( args )
     elseif args == "clear received" then
       m.info( L[ "Received log cleared." ] )
       m.api.TurtleMail_Log[ "Received" ] = {}
+    elseif args == "clear names" then
+      m.info( L[ "Recipient autocomplete names have been cleared." ] )
+      local key = m.api.GetCVar( "realmName" ) .. "|" .. m.api.UnitFactionGroup( "player" )
+      m.api.TurtleMail_AutoCompleteNames[ key ] = {}
     end
   end
 
