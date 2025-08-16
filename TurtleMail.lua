@@ -657,8 +657,22 @@ function TurtleMail.hook.GetContainerItemInfo( bag, slot )
 end
 
 function TurtleMail.hook.PickupContainerItem( bag, slot )
-  if m.sendmail_attached( bag, slot ) then return end
-  if m.api.GetContainerItemInfo( bag, slot ) then m.set_cursor_item( { bag, slot } ) end
+  if m.sendmail_attached( bag, slot ) then
+    if arg1 == "RightButton" and m.api.MailFrame:IsVisible() then
+      return m.sendmail_remove_attachment( { bag, slot } )
+    end
+    return m.orig.PickupContainerItem( bag, slot )
+  end
+
+  if m.api.GetContainerItemInfo( bag, slot ) then
+    if arg1 == "RightButton" and m.api.MailFrame:IsVisible() then
+      m.api.MailFrameTab_OnClick( 2 )
+      m.sendmail_set_attachment( { bag, slot } )
+      return
+    else
+      m.set_cursor_item( { bag, slot } )
+    end
+  end
   return m.orig.PickupContainerItem( bag, slot )
 end
 
@@ -922,6 +936,22 @@ function TurtleMail.attachment_button_on_click()
       if arg1 == "LeftButton" then m.set_cursor_item( attachedItem ) end
       m.orig.PickupContainerItem( unpack( attachedItem ) )
       if arg1 ~= "LeftButton" then m.api.ClearCursor() end -- for the lock changed event
+    end
+  end
+end
+
+function TurtleMail.sendmail_remove_attachment( item )
+  if not item then return end
+  if type( item ) == "table" and m.sendmail_attached( item[ 1 ], item[ 2 ] ) then
+    for i = 1, ATTACHMENTS_MAX do
+      local btn = m.api[ "MailAttachment" .. i ]
+      if btn.item and btn.item[ 1 ] == item[ 1 ] and btn.item[ 2 ] == item[ 2 ] then
+        m.api[ "MailAttachment" .. i ].item = nil
+        m.orig.PickupContainerItem( unpack( item ) )
+        m.api.ClearCursor()
+        m.api.SendMailFrame_Update()
+        return
+      end
     end
   end
 end
@@ -1561,10 +1591,12 @@ function TurtleMail.pfui_skin()
             m.api.pfUI.api.HandleIcon( self, self:GetNormalTexture() )
 
             local link = m.api.GetContainerItemLink( button.item[ 1 ], button.item[ 2 ] )
-            local _, _, linkstr = string.find( link, "(item:%d+:%d+:%d+:%d+)" )
-            local _, _, quality = m.api.GetItemInfo( linkstr )
-            local r, g, b = m.api.GetItemQualityColor( quality )
-            self:SetBackdropBorderColor( r, g, b, 1 )
+            if link then
+              local _, _, linkstr = string.find( link, "(item:%d+:%d+:%d+:%d+)" )
+              local _, _, quality = m.api.GetItemInfo( linkstr )
+              local r, g, b = m.api.GetItemQualityColor( quality )
+              self:SetBackdropBorderColor( r, g, b, 1 )
+            end
           else
             self:SetBackdropBorderColor( m.api.pfUI.api.GetStringColor( m.api.pfUI_config.appearance.border.color ) )
           end
