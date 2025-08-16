@@ -267,7 +267,7 @@ function TurtleMail.PLAYER_LOGIN()
     m.orig[ k ] = m.api[ k ]
     m.api[ k ] = v
   end
-  local key = m.api.GetCVar( "realmName" ) .. "|" .. m.api.UnitFactionGroup( "player" )
+  local key = m.api.GetCVar( "realmName" ) .. "|" .. tostring(m.api.UnitFactionGroup( "player" ))
   m.api.TurtleMail_AutoCompleteNames[ key ] = m.api.TurtleMail_AutoCompleteNames[ key ] or {}
   for char, last_seen in m.api.TurtleMail_AutoCompleteNames[ key ] do
     if m.api.GetTime() - last_seen > 60 * 60 * 24 * 30 then
@@ -320,7 +320,7 @@ end
 
 ---@param name string
 function TurtleMail.add_auto_complete_name( name )
-  local key = m.api.GetCVar( "realmName" ) .. "|" .. m.api.UnitFactionGroup( "player" )
+  local key = m.api.GetCVar( "realmName" ) .. "|" .. tostring(m.api.UnitFactionGroup( "player" ))
   m.api.TurtleMail_AutoCompleteNames[ key ][ name ] = m.api.GetTime()
 end
 
@@ -358,7 +358,7 @@ function TurtleMail.set_cod_text()
 
   --if not m.api.pfUI or not m.api.pfUI.version then
   if not m.pfui_skin_enabled then
-    text = string.match( text, "^(.-)%s+%S+$" )
+    _, _, text = string.find( text, "^(.-)%s+%S+$" )
   end
 
   if m.api.SendMailCODAllButton:GetChecked() then
@@ -656,9 +656,9 @@ function TurtleMail.hook.ClickSendMailItemButton()
 end
 
 function TurtleMail.hook.GetContainerItemInfo( bag, slot )
-  local ret = pack( m.orig.GetContainerItemInfo( bag, slot ) )
-  ret[ 3 ] = ret[ 3 ] or m.sendmail_attached( bag, slot ) and 1 or nil
-  return unpack( ret )
+  local texture, itemCount, locked, quality, readable = m.orig.GetContainerItemInfo( bag, slot )
+  locked = locked or m.sendmail_attached( bag, slot ) and 1 or nil
+  return texture, itemCount, locked, quality, readable
 end
 
 function TurtleMail.hook.PickupContainerItem( bag, slot )
@@ -759,6 +759,14 @@ function TurtleMail.hook.OpenMailFrame_OnHide()
   end
 
   m.orig.OpenMailFrame_OnHide()
+end
+
+function TurtleMail.hook.ContainerFrameItemButton_OnClick(button, ignoreModifiers)
+	if (button == "RightButton" and MailFrame and MailFrame:IsShown() and SendMailFrame:IsShown()) then
+		UseContainerItem(this:GetParent():GetID(), this:GetID())
+		return
+	end
+	return m.orig.ContainerFrameItemButton_OnClick(button, ignoreModifiers)
 end
 
 function TurtleMail.send_mail_button_onclick()
@@ -1146,7 +1154,7 @@ do
     index = nil
 
     local autoCompleteNames = {}
-    for name, time in m.api.TurtleMail_AutoCompleteNames[ m.api.GetCVar "realmName" .. "|" .. m.api.UnitFactionGroup "player" ] do
+    for name, time in m.api.TurtleMail_AutoCompleteNames[ m.api.GetCVar "realmName" .. "|" .. tostring(m.api.UnitFactionGroup "player") ] do
       table.insert( autoCompleteNames, { name = name, time = time } )
     end
     table.sort( autoCompleteNames, function( a, b ) return b.time < a.time end )
