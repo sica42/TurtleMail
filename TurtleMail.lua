@@ -262,7 +262,7 @@ function TurtleMail.PLAYER_LOGIN()
     m.orig[ k ] = m.api[ k ]
     m.api[ k ] = v
   end
-  local key = m.api.GetCVar( "realmName" ) .. "|" .. m.api.UnitFactionGroup( "player" )
+  local key = m.api.GetCVar( "realmName" ) .. "|" .. tostring(m.api.UnitFactionGroup( "player" ))
   m.api.TurtleMail_AutoCompleteNames[ key ] = m.api.TurtleMail_AutoCompleteNames[ key ] or {}
   for char, last_seen in m.api.TurtleMail_AutoCompleteNames[ key ] do
     if m.api.GetTime() - last_seen > 60 * 60 * 24 * 30 then
@@ -315,7 +315,7 @@ end
 
 ---@param name string
 function TurtleMail.add_auto_complete_name( name )
-  local key = m.api.GetCVar( "realmName" ) .. "|" .. m.api.UnitFactionGroup( "player" )
+  local key = m.api.GetCVar( "realmName" ) .. "|" .. tostring(m.api.UnitFactionGroup( "player" ))
   m.api.TurtleMail_AutoCompleteNames[ key ][ name ] = m.api.GetTime()
 end
 
@@ -742,6 +742,14 @@ function TurtleMail.hook.OpenMailFrame_OnHide()
   m.orig.OpenMailFrame_OnHide()
 end
 
+function TurtleMail.hook.ContainerFrameItemButton_OnClick(button, ignoreModifiers)
+	if (button == "RightButton" and MailFrame and MailFrame:IsShown() and SendMailFrame:IsShown()) then
+		UseContainerItem(this:GetParent():GetID(), this:GetID())
+		return
+	end
+	return m.orig.ContainerFrameItemButton_OnClick(button, ignoreModifiers)
+end
+
 function TurtleMail.send_mail_button_onclick()
   m.api.MailAutoCompleteBox:Hide()
 
@@ -1111,7 +1119,7 @@ do
     index = nil
 
     local autoCompleteNames = {}
-    for name, time in m.api.TurtleMail_AutoCompleteNames[ m.api.GetCVar "realmName" .. "|" .. m.api.UnitFactionGroup "player" ] do
+    for name, time in m.api.TurtleMail_AutoCompleteNames[ m.api.GetCVar "realmName" .. "|" .. tostring(m.api.UnitFactionGroup "player") ] do
       table.insert( autoCompleteNames, { name = name, time = time } )
     end
     table.sort( autoCompleteNames, function( a, b ) return b.time < a.time end )
